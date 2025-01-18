@@ -1,22 +1,21 @@
 import { Button, TextInput } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
-import { useForm } from '@mantine/form';
-import { Form } from '@remix-run/react';
+import { Form, useActionData } from '@remix-run/react';
+import { useEffect, useState } from 'react';
+import { ActionDataType } from '~/routes/_index/route';
 
 const AddTodoForm = () => {
-	const form = useForm({
-		initialValues: {
-			todo: '',
-			dueDate: '',
-			actionType: 'add', // Include actionType for server-side logic
-		},
-		validate: {
-			todo: (value) =>
-				value.trim().length === 0 ? 'Todo cannot be empty' : null,
-			dueDate: (value) =>
-				!value ? 'Invalid Input. Please provide a valid date.' : null,
-		},
-	});
+	const [todo, setTodo] = useState('');
+	const [dueDate, setDueDate] = useState('');
+	const actionData = useActionData<ActionDataType>();
+
+	// Reset the form fields when there's an error
+	useEffect(() => {
+		if (actionData?.errorName === 'addTodo') {
+			setTodo('');
+			setDueDate('');
+		}
+	}, [actionData?.errorName]);
 
 	return (
 		<Form method="post" className="flex flex-col p-10">
@@ -26,7 +25,8 @@ const AddTodoForm = () => {
 				label="Todo"
 				placeholder="Write a todo"
 				name="todo"
-				{...form.getInputProps('todo')}
+				value={todo}
+				onChange={(event) => setTodo(event.currentTarget.value)}
 			/>
 
 			{/* Due Date Field */}
@@ -35,16 +35,12 @@ const AddTodoForm = () => {
 				variant="filled"
 				placeholder="Pick a date"
 				name="dueDate"
-				{...form.getInputProps('dueDate')}
+				value={dueDate}
+				onChange={setDueDate}
 			/>
 
 			{/* Hidden Field for Action Type */}
-			<input
-				type="hidden"
-				name="actionType"
-				value={form.values.actionType}
-				{...form.getInputProps('actionType')}
-			/>
+			<input type="hidden" name="actionType" value="add" />
 
 			{/* Submit Button */}
 			<Button type="submit" mt={10}>
